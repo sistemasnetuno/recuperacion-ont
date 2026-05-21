@@ -194,11 +194,11 @@
        ========================================== */
     @media (max-width: 600px) {
       body {
-        padding: 10px; /* Menos espacio en los bordes de la pantalla móvil */
+        padding: 10px;
       }
 
       .card {
-        padding: 20px 15px; /* Tarjetas un poco más compactas */
+        padding: 20px 15px;
         border-radius: 8px;
       }
 
@@ -206,7 +206,6 @@
         font-size: 19px;
       }
 
-      /* La barra de usuario pasa de horizontal a vertical */
       .header-bar {
         flex-direction: column;
         align-items: flex-start;
@@ -216,16 +215,15 @@
 
       .header-actions {
         width: 100%;
-        flex-direction: column; /* Botones de acción apilados uno sobre otro */
+        flex-direction: column;
         gap: 10px;
       }
 
       .header-actions button {
-        width: 100%; /* Botones de cerrar sesión y CSV a todo lo ancho */
+        width: 100%;
         padding: 12px;
       }
 
-      /* En pantallas muy pequeñas, ajusta la estructura de búsqueda de serial */
       .input-group-search {
         flex-direction: column;
       }
@@ -299,8 +297,9 @@
 
         <h3>Datos del equipo</h3>
         <div class="form-group">
-          <label>Serial del equipo (Sin espacios)</label>
-          <input type="text" id="serialRegistro" placeholder="Ej: ALCLB1234567" pattern="^\S+$" title="No se permiten espacios en blanco" required onblur="verificarSerialDuplicado()">
+          <label>Serial del equipo (Obligatorio en Mayúsculas)</label>
+          <!-- Validaciones oninput para transformar a mayúsculas y quitar espacios en tiempo real, pattern para el formulario -->
+          <input type="text" id="serialRegistro" placeholder="Ej: ALCLB1234567" pattern="^[A-Z0-9]+$" title="Solo se permiten letras mayúsculas y números, sin espacios" required oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onblur="verificarSerialDuplicado()">
           <small id="serialWarning" style="color: var(--error); display: none; margin-top: 6px; font-size: 13px;">Este serial ya está registrado en el sistema.</small>
         </div>
         <div class="form-group">
@@ -336,7 +335,8 @@
       <div class="form-group">
         <label>Buscar por Serial</label>
         <div class="input-group input-group-search">
-          <input type="text" id="searchSerial" placeholder="Ingrese serial de la ONT">
+          <!-- También aplicamos la misma lógica en el buscador -->
+          <input type="text" id="searchSerial" placeholder="Ingrese serial de la ONT" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')">
           <button style="width: 120px;" onclick="buscarSerial()" id="btnBuscar">Buscar</button>
         </div>
       </div>
@@ -384,7 +384,7 @@
     const div = document.getElementById('mensaje');
     div.textContent = texto;
     div.className = tipo;
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Te lleva arriba en móviles para ver el aviso
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
     setTimeout(() => { div.className = ""; div.textContent = ""; }, 6000);
   }
 
@@ -424,6 +424,7 @@
   }
 
   async function verificarSerialDuplicado() {
+    // Ya está en mayúsculas gracias al oninput, pero mantenemos .toUpperCase() por seguridad extra
     const serialInput = document.getElementById('serialRegistro').value.trim().toUpperCase();
     const btnGuardar = document.getElementById('btnGuardar');
     const warningLabel = document.getElementById('serialWarning');
@@ -449,14 +450,19 @@
   async function registrarEquipo(e) {
     e.preventDefault();
     let serialInput = document.getElementById('serialRegistro').value;
-    if (/\s/.test(serialInput)) { mostrarMensaje("El serial no puede tener espacios.", "error"); return; }
+    
+    // Validación de seguridad antes de enviar
+    if (/[a-z\s]/.test(serialInput)) { 
+      mostrarMensaje("El serial solo puede contener mayúsculas y no debe tener espacios.", "error"); 
+      return; 
+    }
 
     const btn = document.getElementById('btnGuardar');
     btn.disabled = true; btn.textContent = "Procesando...";
 
     const datos = {
       cedula: document.getElementById('tipoCedula').value + document.getElementById('cedula').value,
-      serial: serialInput.toUpperCase(),
+      serial: serialInput,
       modelo: document.getElementById('modeloRegistro').value.toUpperCase(),
       operadora: document.getElementById('operadora').value,
       recuperadoPor: document.getElementById('recuperadoPor').value,
