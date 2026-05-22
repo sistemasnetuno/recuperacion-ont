@@ -305,12 +305,16 @@
           <input type="text" id="serialRegistro" placeholder="Ej: ALCLB1234567" pattern="^[A-Z0-9]+$" title="Solo se permiten letras mayúsculas y números, sin espacios" required oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onblur="verificarSerialDuplicado()">
           <small id="serialWarning" style="color: var(--error); display: none; margin-top: 6px; font-size: 13px;">Este serial ya está registrado en el sistema.</small>
         </div>
+        
+        <!-- Campo de modelo ajustado a Select C/W y S/W -->
         <div class="form-group">
           <label>Modelo del equipo</label>
           <select id="modeloRegistro" required>
-            <option value="c/w">C/W</option>
-            <option value="s/w">S/W</option>
+            <option value="C/W">C/W</option>
+            <option value="S/W">S/W</option>
+          </select>
         </div>
+        
         <div class="form-group">
           <label>Operadora / Nodo</label>
           <select id="operadora" required>
@@ -382,24 +386,28 @@
           <label>Observación Técnica</label>
           <textarea id="observacionEquipo" rows="3" placeholder="Detalles de la revisión..."></textarea>
         </div>
+        
+        <!-- Nuevos campos para operaciones -->
         <div class="form-group">
-          <label>potencia</label>
-          <textarea id="potencia" placeholder="Potencia del equipo..."></textarea>
+          <label>Potencia</label>
+          <input type="text" id="potencia" placeholder="Ej: -23.5 dBm" required>
         </div>
         <div class="form-group">
-          <label>Posee caja?</label>
+          <label>¿Posee caja?</label>
           <select id="caja" required>
-            <option value="si">Si</option>
-            <option value="no">No</option>
+            <option value="Si">Sí</option>
+            <option value="No">No</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Posee fuente de poder?</label>
+          <label>¿Posee fuente de poder?</label>
           <select id="fuente" required>
-            <option value="si">Si</option>
-            <option value="no">No</option>
+            <option value="Si">Sí</option>
+            <option value="No">No</option>
           </select>
         </div>
+        <!-- Fin nuevos campos -->
+        
         <button type="submit" id="btnActualizar">Actualizar Status</button>
       </form>
     </div>
@@ -470,7 +478,6 @@
   }
 
   async function verificarSerialDuplicado() {
-    // Ya está en mayúsculas gracias al oninput, pero mantenemos .toUpperCase() por seguridad extra
     const serialInput = document.getElementById('serialRegistro').value.trim().toUpperCase();
     const btnGuardar = document.getElementById('btnGuardar');
     const warningLabel = document.getElementById('serialWarning');
@@ -497,7 +504,6 @@
     e.preventDefault();
     let serialInput = document.getElementById('serialRegistro').value;
     
-    // Validación de seguridad antes de enviar
     if (/[a-z\s]/.test(serialInput)) { 
       mostrarMensaje("El serial solo puede contener mayúsculas y no debe tener espacios.", "error"); 
       return; 
@@ -509,7 +515,7 @@
     const datos = {
       cedula: document.getElementById('tipoCedula').value + document.getElementById('cedula').value,
       serial: serialInput,
-      modelo: document.getElementById('modeloRegistro').value.toUpperCase(),
+      modelo: document.getElementById('modeloRegistro').value,
       operadora: document.getElementById('operadora').value,
       recuperadoPor: document.getElementById('recuperadoPor').value,
       status: "Pendiente revisión", observacion: "", registradoPor: rolActual
@@ -537,10 +543,17 @@
       const resultado = await peticionBackend('buscarONT', { serial: serial });
       if (resultado) {
         document.getElementById('actualizarForm').classList.remove('hidden');
-        if(resultado.status !== "Pendiente revisión" && resultado.status !== "") {
+        
+        if(resultado.status && resultado.status !== "Pendiente revisión") {
           document.getElementById('statusEquipo').value = resultado.status;
         }
-        document.getElementById('observacionEquipo').value = resultado.observacion;
+        document.getElementById('observacionEquipo').value = resultado.observacion || "";
+        
+        // Autocompletar datos nuevos si el backend ya los envía
+        document.getElementById('potencia').value = resultado.potencia || "";
+        if (resultado.caja) document.getElementById('caja').value = resultado.caja;
+        if (resultado.fuente) document.getElementById('fuente').value = resultado.fuente;
+
         mostrarMensaje("Equipo encontrado.", "success");
       } else {
         document.getElementById('actualizarForm').classList.add('hidden');
@@ -561,12 +574,29 @@
     const serial = document.getElementById('searchSerial').value.trim().toUpperCase();
     const status = document.getElementById('statusEquipo').value;
     const obs = document.getElementById('observacionEquipo').value;
+    
+    // Captura de los nuevos campos agregados
+    const potencia = document.getElementById('potencia').value;
+    const caja = document.getElementById('caja').value;
+    const fuente = document.getElementById('fuente').value;
 
     try {
-      await peticionBackend('actualizarStatus', { serial, status, observacion: obs });
+      // Se envían al backend
+      await peticionBackend('actualizarStatus', { 
+        serial, 
+        status, 
+        observacion: obs, 
+        potencia, 
+        caja, 
+        fuente 
+      });
+      
       mostrarMensaje("Status actualizado correctamente.", "success");
       document.getElementById('actualizarForm').classList.add('hidden');
       document.getElementById('searchSerial').value = "";
+      
+      // Reseteamos el formulario de actualización
+      document.getElementById('actualizarForm').reset();
     } catch (error) {
       mostrarMensaje("Error al actualizar la base de datos.", "error");
     } finally {
