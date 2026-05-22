@@ -119,6 +119,14 @@
       background-color: rgba(255, 255, 255, 0.12);
     }
 
+    /* ==========================================
+       CORRECCIÓN PARA OPCIONES DEL SELECT
+       ========================================== */
+    select option {
+      background-color: #34495e; /* Fondo oscuro y sólido */
+      color: #ffffff; /* Texto blanco */
+    }
+
     /* Grupo de cédula y búsquedas con flexibilidad inteligente */
     .input-group { 
       display: flex; 
@@ -236,12 +244,10 @@
 <body>
 
 <div class="logo-container">
-  <!-- Reemplaza esta URL de prueba con tu logo real -->
   <img src="https://i.ibb.co/kgpG36nw/Logo-Net-Uno-RIF.png" alt="Logo-Net-Uno-RIF" border="0">
 </div>
 
 <div class="container">
-  <!-- VISTA: LOGIN -->
   <div id="loginView" class="card">
     <h2>Sistema de Registro ONT</h2>
     <form id="loginForm" onsubmit="iniciarSesion(event)">
@@ -264,7 +270,6 @@
     </form>
   </div>
 
-  <!-- VISTA: PANEL PRINCIPAL (DASHBOARD) -->
   <div id="dashboardView" class="hidden">
     <div class="header-bar card">
       <div>
@@ -278,7 +283,6 @@
 
     <div id="mensaje"></div>
 
-    <!-- MÓDULO: REGISTRO (ADMIN, SAC, CONTRATISTA) -->
     <div id="moduloRegistro" class="card hidden">
       <h2>Registro de ONT Recuperada</h2>
       <form id="registroForm" onsubmit="registrarEquipo(event)">
@@ -298,7 +302,6 @@
         <h3>Datos del equipo</h3>
         <div class="form-group">
           <label>Serial del equipo (Obligatorio en Mayúsculas)</label>
-          <!-- Validaciones oninput para transformar a mayúsculas y quitar espacios en tiempo real, pattern para el formulario -->
           <input type="text" id="serialRegistro" placeholder="Ej: ALCLB1234567" pattern="^[A-Z0-9]+$" title="Solo se permiten letras mayúsculas y números, sin espacios" required oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')" onblur="verificarSerialDuplicado()">
           <small id="serialWarning" style="color: var(--error); display: none; margin-top: 6px; font-size: 13px;">Este serial ya está registrado en el sistema.</small>
         </div>
@@ -329,13 +332,11 @@
       </form>
     </div>
 
-    <!-- MÓDULO: OPERACIONES (ADMIN, OPERACIONES) -->
     <div id="moduloOperaciones" class="card hidden">
       <h2>Actualizar Status de Equipo</h2>
       <div class="form-group">
         <label>Buscar por Serial</label>
         <div class="input-group input-group-search">
-          <!-- También aplicamos la misma lógica en el buscador -->
           <input type="text" id="searchSerial" placeholder="Ingrese serial de la ONT" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')">
           <button style="width: 120px;" onclick="buscarSerial()" id="btnBuscar">Buscar</button>
         </div>
